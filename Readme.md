@@ -1,10 +1,14 @@
 Three Contracts 
 
 ** 1. KeyGeneration**
+
+
 This  contract called "KeyGeneration" implements a basics of the DKG protocol.
 The contract allows players to register with the contract and submit their secret number, then it generates a shared public key using the sum of the submitted numbers and threshold value, after generating the shared public key using the sum of the numbers and threshold value, it uses this shared public key along with the player's number to generate the player's individual public key and private key using the ElGamal encryption.
 
 ** 2. GameServer**
+
+
 Approves Players to the game using ElGamal encryption to verify the seed and public keys generated from _KeyGeneration_, and then use Schnorr signatures and a 
 Distributed Key Generation (DKG) protocol to approve the public key for use in a game 
 
