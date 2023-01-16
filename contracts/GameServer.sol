@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
+import "./KeyGeneration.sol";
 
 
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/math/SafeMath.sol";
@@ -12,6 +13,17 @@ contract GameServer {
     mapping(address => bytes32) public playerSeed;
     mapping(address => bytes32) public playerPublicKey;
     mapping(address => bool) public playerApproved;
+    mapping(address => bytes) public playerActions;
+
+
+    struct Player {
+        address addr;
+        uint share;
+        bytes32 publicKey;
+        bytes32 privateKey;
+    }
+    mapping(address => Player) public players;
+
 
     constructor(address _cardGameAddress) public {
         cardGameAddress = _cardGameAddress;
@@ -19,6 +31,8 @@ contract GameServer {
 
     function verifySeedAndPublicKey(address _player, bytes32 _seed, bytes32 _publicKey) public {
         require(players[_player].addr == _player, "Player not registered");
+        require(KeyGeneration(cardGameAddress).players[_player].addr == _player, "Player not registered");
+
         bytes32 sharedPublicKey = KeyGeneration(cardGameAddress).getSharedPublicKey();
         require(ElGamalEncryption.verifyPublicKey(_publicKey, sharedPublicKey, players[_player].share), "Invalid public key");
         require(SchnorrVerifier.verifySignature(_seed, _publicKey), "Invalid seed");
@@ -29,18 +43,24 @@ contract GameServer {
 
     function approvePlayer(address _player) public {
         require(players[_player].addr == _player, "Player not registered");
+        require(KeyGeneration(cardGameAddress).players[_player].addr == _player, "Player not registered");
+
         require(playerApproved[_player], "Player not verified");
         CardGame(cardGameAddress).approvePlayer(_player, playerPublicKey[_player]);
     }
 
-        function shuffleCards() internal returns (bytes32) {
-        // Shuffle the cards here
-        // ...
+   function shuffleCards() internal returns (bytes32) {
+    // Shuffle the cards here
+    // ...
 
-        // Encrypt the shuffled cards using ElGamal encryption
-        bytes32 sharedPublicKey = KeyGeneration(cardGameAddress).getSharedPublicKey();
-        return ElGamalEncryption.encrypt(shuffledCards, sharedPublicKey);
-    }
+    // Encrypt the shuffled cards using ElGamal encryption
+    bytes32 sharedPublicKey = KeyGeneration(cardGameAddress).getSharedPublicKey();
+    return ElGamalEncryption.encrypt(shuffledCards, sharedPublicKey);function getSharedPublicKey() public view returns (bytes32) {
+    return sharedPublicKey;
+}
+
+}
+
 
 
     function encryptCards(address _player) public {
@@ -74,8 +94,10 @@ contract GameServer {
 
 
         function updateGameState(address _player, bytes _action) public {
-        require(playerApproved[_player], "Player not approved");
-        require(playerActions[_player] == _action, "Invalid action");
-        // Update the game state here
-        CardGame(cardGameAddress).updateGameState(_player, _action);
-    }
+    require(playerApproved[_player], "Player not approved");
+    require(playerActions[_player] == _action, "Invalid action");
+    // Update the game state here
+    CardGame(cardGameAddress).updateGameState(_player, _action);
+}
+
+
