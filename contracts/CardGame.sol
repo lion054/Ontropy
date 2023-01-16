@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 import "./GameServer.sol";
 
+
 contract CardGame {
     address[] public players;
     mapping(address => bool) public playerApproved;
@@ -12,15 +13,18 @@ contract CardGame {
 
     function approvePlayer(address _player, bytes32 _publicKey) public {
         require(msg.sender == address(GameServer), "Only GameServer contract can approve players");
-        require(!playerApproved[_player], "Player already approved");
+        require(!playerApproved[_player], "Player already approved");require(_player != address(0), "Invalid address passed");
+        
+        playerSeed[_player] = GameServer(msg.sender).getPlayerSeed(_player);
         playerApproved[_player] = true;
         playerPublicKey[_player] = _publicKey;
-        playerSeed[_player] = GameServer(msg.sender).getPlayerSeed(_player);
         players.push(_player);
     }
 
         function startGame() public {
         require(msg.sender == address(GameServer), "Only GameServer can start the game");
+        require(players.length > 0, "At least one player should be approved to start the game");
+
         // Shuffle the cards
         bytes32 shuffledCards = GameServer(msg.sender).shuffleCards();
         // Encrypt the shuffled cards
@@ -32,6 +36,8 @@ contract CardGame {
 
     function updateGameState(address _player, bytes _action) public {
         require(playerApproved[_player], "Player not approved");
+        require(_action.length == 32, "Invalid action");
+
         // Update game state based on player's action
         // ...
     }
